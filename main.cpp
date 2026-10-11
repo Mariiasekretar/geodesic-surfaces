@@ -52,6 +52,29 @@ State rk4_step(const State& s, double dt, F derivs) {
     return next;
 }
 
+double run_verification_test(int steps) {
+    double T = 2.0 * M_PI;
+    double dt = T / steps;
+    double alpha = M_PI / 4.0; 
+    
+    State s = {M_PI / 2.0, 0.0, -std::sin(alpha), std::cos(alpha)};
+    State init = s;
+
+    for (int i = 0; i < steps; ++i) {
+        s = rk4_step(s, dt, sphere_derivs);
+    }
+
+    double x_init = R_SPHERE * std::sin(init.u) * std::cos(init.v);
+    double y_init = R_SPHERE * std::sin(init.u) * std::sin(init.v);
+    double z_init = R_SPHERE * std::cos(init.u);
+
+    double x_end = R_SPHERE * std::sin(s.u) * std::cos(s.v);
+    double y_end = R_SPHERE * std::sin(s.u) * std::sin(s.v);
+    double z_end = R_SPHERE * std::cos(s.u);
+
+    return std::sqrt(std::pow(x_end - x_init, 2) + std::pow(y_end - y_init, 2) + std::pow(z_end - z_init, 2));
+}
+
 void run_simulation(const std::string& filename, State init, double T, double dt, bool is_sphere) {
     std::ofstream file(filename);
     file << "x,y,z\n";
@@ -76,6 +99,11 @@ void run_simulation(const std::string& filename, State init, double T, double dt
 }
 
 int main() {
+    std::cout << "=== VERIFICATION TEST ===" << std::endl;
+    std::cout << "N = 60  steps error: " << run_verification_test(60) << std::endl;
+    std::cout << "N = 600 steps error: " << run_verification_test(600) << std::endl;
+    std::cout << "=========================" << std::endl;
+
     double alpha = M_PI / 4.0; 
     State sphere_init = {M_PI / 2.0, 0.0, -std::sin(alpha), std::cos(alpha)};
     run_simulation("sphere.csv", sphere_init, 2.0 * M_PI, 0.01, true);
